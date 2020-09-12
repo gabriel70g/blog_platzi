@@ -4,7 +4,10 @@ import {
 	CARGANDO,
 	ERROR,
 	CAMBIO_USUARIO,
-	CAMBIO_TITULO
+	CAMBIO_TITULO,
+	GUARDADA,
+	ACTUALIZAR,
+	LIMPIAR
 } from '../types/tareasTypes';
 
 export const traerTodas = () => async (dispatch) => {
@@ -52,3 +55,92 @@ export const cambioTitulo = (valor) => (dispatch) => {
 		payload: valor
 	})
 };
+
+export const agregar = (nueva_tarea) => async (dispatch) => {
+	dispatch({
+		type: CARGANDO
+	});
+
+	try {
+		await axios.post('https://jsonplaceholder.typicode.com/todos', nueva_tarea);
+		dispatch({
+			type: GUARDADA
+		});
+	}
+	catch (error) {
+		console.log(error.message);
+		dispatch({
+			type: ERROR,
+			payload: 'Servicio no disponible en este momento.'
+		});
+	}
+};
+
+export const editar = (tarea_editada) => async (dispatch) => {
+	dispatch({
+		type: CARGANDO
+	});
+
+	try {
+		await axios.put(`https://jsonplaceholder.typicode.com/todos/${tarea_editada.id}`, tarea_editada);
+		dispatch({
+			type: GUARDADA
+		});
+	}
+	catch (error) {
+		console.log(error.message);
+		dispatch({
+			type: ERROR,
+			payload: 'Servicio no disponible en este momento.'
+		});
+	}
+};
+
+export const cambioCheck = (usu_id, tar_id) => (dispatch, getState) => {
+	const { tareas } = getState().tareasReducer;
+	const seleccionada = tareas[usu_id][tar_id];
+
+	const actualizadas = {
+		...tareas
+	};
+	actualizadas[usu_id] = {
+		...tareas[usu_id]
+	};
+	actualizadas[usu_id][tar_id] = {
+		...tareas[usu_id][tar_id],
+		completed: !seleccionada.completed
+	}
+
+	dispatch({
+		type: ACTUALIZAR,
+		payload: actualizadas
+	})
+};
+
+export const eliminar = (tar_id) => async (dispatch) =>{
+	dispatch({
+		type: CARGANDO
+	});
+		try{
+			const resp = await axios.delete(`https://jsonplaceholder.typicode.com/todos/${tar_id}`);
+			
+			dispatch({
+				type: TRAER_TODAS,
+				payload: {}
+			})
+
+		}catch(err) {
+			console.log(err.message)
+			dispatch({
+				type: ERROR,
+				payload: 'Servicio no disponible'
+			})
+		}
+
+};
+
+export const limpiarForma = () => (dispatch) => {
+	dispatch({
+		type:LIMPIAR
+	})
+}
